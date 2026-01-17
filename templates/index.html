@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Which Type of Student Are You? - ML Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎓 Which Type of Student Are You?</h1>
+            <p class="subtitle">Discover your student personality using Machine Learning</p>
+        </header>
+
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <p>📊 <strong>ML Lab Project:</strong> Classification using supervised learning algorithms</p>
+        </div>
+
+        <!-- Main Form -->
+        <div class="form-container">
+            <h2>Enter Your Details</h2>
+            <p class="form-description">Fill in your academic and lifestyle information to get your prediction</p>
+
+            <form action="/predict" method="POST" id="studentForm">
+                <!-- Study Hours -->
+                <div class="form-group">
+                    <label for="study_hours">
+                        📚 Study Hours (per day)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">How many hours do you study daily?</span>
+                        </span>
+                    </label>
+                    <input type="number" id="study_hours" name="study_hours" 
+                           min="0" max="24" value="5" required>
+                    <span class="range-label">0-24 hours</span>
+                </div>
+
+                <!-- Attendance -->
+                <div class="form-group">
+                    <label for="attendance">
+                        ✅ Attendance Percentage
+                        <span class="tooltip">?
+                            <span class="tooltiptext">What's your average attendance?</span>
+                        </span>
+                    </label>
+                    <input type="number" id="attendance" name="attendance" 
+                           min="0" max="100" value="75" required>
+                    <span class="range-label">0-100%</span>
+                </div>
+
+                <!-- Assignments -->
+                <div class="form-group">
+                    <label for="assignments">
+                        📝 Do you complete assignments regularly?
+                    </label>
+                    <select id="assignments" name="assignments" required>
+                        <option value="yes">Yes, I complete them</option>
+                        <option value="no">No, I often skip them</option>
+                    </select>
+                </div>
+
+                <!-- Social Media -->
+                <div class="form-group">
+                    <label for="social_media">
+                        📱 Social Media Usage (hours per day)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">Time spent on social media daily</span>
+                        </span>
+                    </label>
+                    <input type="number" id="social_media" name="social_media" 
+                           min="0" max="24" value="3" required>
+                    <span class="range-label">0-24 hours</span>
+                </div>
+
+                <!-- Sleep Hours -->
+                <div class="form-group">
+                    <label for="sleep_hours">
+                        😴 Sleep Hours (per day)
+                        <span class="tooltip">?
+                            <span class="tooltiptext">How many hours do you sleep?</span>
+                        </span>
+                    </label>
+                    <input type="number" id="sleep_hours" name="sleep_hours" 
+                           min="0" max="24" value="7" required>
+                    <span class="range-label">0-24 hours</span>
+                </div>
+
+                <!-- Backlogs -->
+                <div class="form-group">
+                    <label for="backlogs">
+                        ⚠️ Do you have any backlogs?
+                    </label>
+                    <select id="backlogs" name="backlogs" required>
+                        <option value="no">No backlogs</option>
+                        <option value="yes">Yes, I have backlogs</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn">
+                    🔮 Predict My Student Type
+                </button>
+            </form>
+        </div>
+
+        <!-- Student Types Info -->
+        <div class="types-container">
+            <h2>📋 Student Types</h2>
+            <div class="types-grid">
+                <div class="type-card topper">
+                    <div class="type-icon">🏆</div>
+                    <h3>Topper</h3>
+                    <p>Dedicated, consistent learner with excellent performance</p>
+                </div>
+                <div class="type-card backbencher">
+                    <div class="type-icon">😎</div>
+                    <h3>Backbencher</h3>
+                    <p>Relaxed approach, needs better time management</p>
+                </div>
+                <div class="type-card crammer">
+                    <div class="type-icon">📚</div>
+                    <h3>Crammer</h3>
+                    <p>Last-minute learning champion before exams</p>
+                </div>
+                <div class="type-card all-rounder">
+                    <div class="type-icon">⭐</div>
+                    <h3>All-Rounder</h3>
+                    <p>Great balance in academics and personal life</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🤖 Powered by Machine Learning | End-Semester ML Lab Project</p>
+            <p class="tech-stack">
+                <span>Python</span> • <span>Scikit-learn</span> • <span>Flask</span> • <span>HTML/CSS</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Form validation
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            const studyHours = parseInt(document.getElementById('study_hours').value);
+            const attendance = parseInt(document.getElementById('attendance').value);
+            const socialMedia = parseInt(document.getElementById('social_media').value);
+            const sleepHours = parseInt(document.getElementById('sleep_hours').value);
+
+            // Validate ranges
+            if (studyHours < 0 || studyHours > 24) {
+                alert('Study hours must be between 0 and 24');
+                e.preventDefault();
+                return false;
+            }
+            if (attendance < 0 || attendance > 100) {
+                alert('Attendance must be between 0 and 100');
+                e.preventDefault();
+                return false;
+            }
+            if (socialMedia < 0 || socialMedia > 24) {
+                alert('Social media hours must be between 0 and 24');
+                e.preventDefault();
+                return false;
+            }
+            if (sleepHours < 0 || sleepHours > 24) {
+                alert('Sleep hours must be between 0 and 24');
+                e.preventDefault();
+                return false;
+            }
+
+            // Check if total hours exceed 24
+            const totalHours = studyHours + socialMedia + sleepHours;
+            if (totalHours > 24) {
+                alert('Total hours (study + social media + sleep) cannot exceed 24 hours per day');
+                e.preventDefault();
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

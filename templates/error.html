@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Student Type Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>⚠️ Oops! Something went wrong</h1>
+        </header>
+
+        <!-- Error Message -->
+        <div class="error-container">
+            <div class="error-icon">❌</div>
+            <h2>Error Occurred</h2>
+            <p class="error-message">{{ error_message }}</p>
+            
+            <div class="error-suggestions">
+                <h3>Possible solutions:</h3>
+                <ul>
+                    <li>Check if all input values are within valid ranges</li>
+                    <li>Ensure the ML model has been trained (run training_notebook.ipynb)</li>
+                    <li>Verify that model files exist in the model/ directory</li>
+                    <li>Try refreshing the page and submitting again</li>
+                </ul>
+            </div>
+
+            <a href="/" class="btn btn-primary">🏠 Go Back Home</a>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🤖 Powered by Machine Learning | End-Semester ML Lab Project</p>
+        </footer>
+    </div>
+</body>
+</html>

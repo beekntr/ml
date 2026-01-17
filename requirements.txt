@@ -1,0 +1,32 @@
+# Student Type Prediction - ML Project Dependencies
+# End-Semester ML Lab Project
+# Python 3.7+
+
+# Core Data Science Libraries
+pandas>=1.3.0
+numpy>=1.21.0
+
+# Machine Learning
+scikit-learn>=1.0.0
+
+# Data Visualization
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Association Rule Mining
+mlxtend>=0.19.0
+
+# Web Framework
+Flask>=2.0.0
+Werkzeug>=2.0.0
+
+# Model Persistence
+pickle-mixin>=1.0.2
+
+# Jupyter Support (for notebook)
+jupyter>=1.0.0
+notebook>=6.4.0
+ipykernel>=6.0.0
+
+# Optional but Recommended
+scipy>=1.7.0

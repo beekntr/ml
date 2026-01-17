@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result - Student Type</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎓 Your Student Type Result</h1>
+            <p class="subtitle">Based on Machine Learning Analysis</p>
+        </header>
+
+        <!-- Result Card -->
+        <div class="result-container">
+            <div class="result-card" data-student-type="{{ student_type|lower|replace(' ', '-') }}">
+                <div class="result-header">
+                    <div class="result-emoji">{{ emoji }}</div>
+                    <div class="result-title">
+                        <h2>You are a <span class="student-type-highlight">{{ student_type }}</span>!</h2>
+                        <p class="confidence">Confidence: {{ confidence }}%</p>
+                    </div>
+                </div>
+
+                <div class="result-description">
+                    <p class="main-description">{{ description }}</p>
+                </div>
+
+                <!-- Characteristics -->
+                <div class="characteristics">
+                    <h3>📊 Your Characteristics:</h3>
+                    <ul>
+                        {% for characteristic in characteristics %}
+                        <li>{{ characteristic }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Advice -->
+                <div class="advice-box">
+                    <h3>💡 Personalized Advice:</h3>
+                    <p>{{ advice }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Summary -->
+        <div class="summary-container">
+            <h3>📝 Your Input Summary:</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-label">📚 Study Hours:</span>
+                    <span class="summary-value">{{ input_summary.study_hours }} hrs/day</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">✅ Attendance:</span>
+                    <span class="summary-value">{{ input_summary.attendance }}%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">📝 Assignments:</span>
+                    <span class="summary-value">{{ input_summary.assignments }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">📱 Social Media:</span>
+                    <span class="summary-value">{{ input_summary.social_media }} hrs/day</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">😴 Sleep:</span>
+                    <span class="summary-value">{{ input_summary.sleep_hours }} hrs/day</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">⚠️ Backlogs:</span>
+                    <span class="summary-value">{{ input_summary.backlogs }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="/" class="btn btn-primary">🔄 Try Again</a>
+            <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Result</button>
+            <button onclick="shareResult()" class="btn btn-secondary">📤 Share</button>
+        </div>
+
+        <!-- ML Info -->
+        <div class="ml-info">
+            <h3>🤖 How does this work?</h3>
+            <p>
+                This prediction is powered by a <strong>{{ student_type }}</strong> classification model trained on 150+ student records.
+                The system analyzes your academic habits and lifestyle patterns using supervised learning algorithms
+                including Decision Tree, Random Forest, SVM, and Naive Bayes to predict your student category.
+            </p>
+            <div class="algorithms-used">
+                <span class="algorithm-tag">Decision Tree</span>
+                <span class="algorithm-tag">Random Forest</span>
+                <span class="algorithm-tag">Naive Bayes</span>
+                <span class="algorithm-tag">K-Nearest Neighbors</span>
+                <span class="algorithm-tag">SVM</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🤖 Powered by Machine Learning | End-Semester ML Lab Project</p>
+            <p class="tech-stack">
+                <span>Python</span> • <span>Scikit-learn</span> • <span>Flask</span> • <span>HTML/CSS</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function shareResult() {
+            const text = `I just discovered I'm a {{ student_type }}! 🎓\nFind out your student type using ML: ${window.location.origin}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Student Type',
+                    text: text,
+                    url: window.location.origin
+                }).catch(err => console.log('Error sharing:', err));
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Result copied to clipboard! Share it with your friends.');
+                }).catch(err => {
+                    alert('Unable to share. Please copy the URL manually.');
+                });
+            }
+        }
+
+        // Print-specific styling
+        window.addEventListener('beforeprint', function() {
+            document.body.style.background = 'white';
+        });
+    </script>
+</body>
+</html>
