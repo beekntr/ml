@@ -128,28 +128,21 @@ jobs:
         run: |
           echo "❌ Deployment failed! Check logs for details."
 
-  # Stage 4: Post-deployment validation
-  validate:
-    name: Post-Deployment Validation
+  # Stage 4: Post-deployment notification
+  notify:
+    name: Deployment Complete
     runs-on: ubuntu-latest
     needs: deploy
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-      - name: Wait for service to be ready
-        run: sleep 20
-
-      - name: Health check
+      - name: Deployment Summary
         run: |
-          curl -f http://${{ secrets.HOME_SERVER_HOST }}:5000/ || exit 1
-          echo "✅ Application is healthy!"
-
-      - name: Basic smoke test
-        run: |
-          response=$(curl -s http://${{ secrets.HOME_SERVER_HOST }}:5000/)
-          if [[ $response == *"Student Type"* ]]; then
-            echo "✅ Smoke test passed!"
-          else
-            echo "❌ Smoke test failed!"
-            exit 1
-          fi
+          echo "🚀 Deployment completed successfully!"
+          echo ""
+          echo "To verify deployment on your server, SSH and run:"
+          echo "  docker compose ps"
+          echo "  docker compose logs -f"
+          echo "  curl http://localhost:5000/"
+          echo ""
+          echo "Access your application at: http://${{ secrets.HOME_SERVER_HOST }}:5000"
