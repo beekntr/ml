@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Main ML Flask Application
+  ml-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: student-type-predictor
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount model directory to persist trained models
+      - ./model:/app/model
+      # Mount logs directory
+      - ./logs:/app/logs
+    networks:
+      - ml-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.project.name=student-type-predictor"
+      - "com.project.description=ML-based student type classification"
+      - "com.project.version=1.0.0"
+
+  # Optional: Nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: ml-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - ml-app
+    networks:
+      - ml-network
+    profiles:
+      - production
+
+networks:
+  ml-network:
+    driver: bridge
+    name: ml-network
+
+volumes:
+  model-data:
+    name: ml-model-data
+  logs-data:
+    name: ml-logs-data

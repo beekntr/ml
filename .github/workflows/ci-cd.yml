@@ -1,0 +1,183 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE_NAME: student-type-predictor
+  DOCKER_REGISTRY: ghcr.io
+  
+jobs:
+  # Stage 1: Code Quality & Testing
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pylint flake8 black
+
+      - name: Code formatting check (Black)
+        run: black --check app.py || true
+
+      - name: Linting (Flake8)
+        run: flake8 app.py --max-line-length=120 --ignore=E501,W503 || true
+
+      - name: Static analysis (Pylint)
+        run: pylint app.py --disable=C0111,C0103 || true
+
+      - name: Security scan (Bandit)
+        run: |
+          pip install bandit
+          bandit -r . -ll || true
+
+  # Stage 2: Build Docker Image
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ github.repository }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_REGISTRY }}/${{ github.repository }}:buildcache,mode=max
+
+      - name: Image vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+        if: always()
+
+  # Stage 3: Deploy to Home Server
+  deploy:
+    name: Deploy to Home Server
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to home server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.HOME_SERVER_HOST }}
+          username: ${{ secrets.HOME_SERVER_USER }}
+          key: ${{ secrets.HOME_SERVER_SSH_KEY }}
+          port: ${{ secrets.HOME_SERVER_PORT || 22 }}
+          script: |
+            # Navigate to project directory
+            cd ${{ secrets.DEPLOY_PATH || '~/student-type-project' }}
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Pull latest Docker image
+            docker compose pull
+            
+            # Stop and remove old containers
+            docker compose down
+            
+            # Start new containers
+            docker compose up -d
+            
+            # Clean up old images
+            docker image prune -af
+            
+            # Health check
+            sleep 10
+            curl -f http://localhost:5000/ || exit 1
+            
+            echo "✅ Deployment successful!"
+
+      - name: Notification on success
+        if: success()
+        run: |
+          echo "🚀 Deployment to home server completed successfully!"
+          
+      - name: Notification on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Check logs for details."
+
+  # Stage 4: Post-deployment validation
+  validate:
+    name: Post-Deployment Validation
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Wait for service to be ready
+        run: sleep 20
+
+      - name: Health check
+        run: |
+          curl -f http://${{ secrets.HOME_SERVER_HOST }}:5000/ || exit 1
+          echo "✅ Application is healthy!"
+
+      - name: Basic smoke test
+        run: |
+          response=$(curl -s http://${{ secrets.HOME_SERVER_HOST }}:5000/)
+          if [[ $response == *"Student Type"* ]]; then
+            echo "✅ Smoke test passed!"
+          else
+            echo "❌ Smoke test failed!"
+            exit 1
+          fi
