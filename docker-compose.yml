@@ -1,5 +1,5 @@
 services:
-  # Main ML Flask Application
+  # Flask app only - system Nginx will proxy to this
   ml-app:
     build:
       context: .
@@ -17,8 +17,6 @@ services:
       - ./model:/app/model
       # Mount logs directory
       - ./logs:/app/logs
-    networks:
-      - ml-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]
       interval: 30s
@@ -30,29 +28,7 @@ services:
       - "com.project.description=ML-based student type classification"
       - "com.project.version=1.0.0"
 
-  # Nginx reverse proxy for domain access
-  nginx:
-    image: nginx:alpine
-    container_name: ml-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx-simple.conf:/etc/nginx/nginx.conf:ro
-      - ./logs/nginx:/var/log/nginx
-    depends_on:
-      - ml-app
-    networks:
-      - ml-network
-
 networks:
   ml-network:
     driver: bridge
     name: ml-network
-
-volumes:
-  model-data:
-    name: ml-model-data
-  logs-data:
-    name: ml-logs-data
